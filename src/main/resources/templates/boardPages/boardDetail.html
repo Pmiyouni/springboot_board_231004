@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:replace="~{component/config :: config}"></th:block>
+</head>
+<body>
+<div th:replace="~{component/header :: header}"></div>
+<div th:replace="~{component/nav :: nav}"></div>
+
+<div class="container mt-5 mb-5">
+    <!-- 화면에 보여질 내용이 들어갈 부분 -->
+    <table class="table table-hover">
+        <tr>
+            <th>id</th>
+            <td th:text="${board.id}"></td>
+        </tr>
+        <tr>
+            <th>title</th>
+            <td th:text="${board.boardTitle}"></td>
+        </tr>
+        <tr>
+            <th>writer</th>
+            <td th:text="${board.boardWriter}"></td>
+        </tr>
+        <tr>
+            <th>date</th>
+            <td th:text="${board.createdAt}"></td>
+        </tr>
+        <tr>
+            <th>hits</th>
+            <td th:text="${board.boardHits}"></td>
+        </tr>
+        <tr>
+            <th>contents</th>
+            <td th:text="${board.boardContents}"></td>
+        </tr>
+        <tr th:if="${board.fileAttached == 1}">
+            <th>image</th>
+            <td th:each="fileName: ${board.storedFileName}">
+                <img th:src="@{|/upload/${fileName}}" width="200" height="200" alt="">
+            </td>
+        </tr>
+    </table>
+    <div id="btn-area">
+        <button class="btn btn-primary" onclick="list_fn()">목록</button>
+        <!-- 수정 또는 삭제 버튼을 클릭하면 비밀번호를 입력하는 input 창이 노출되고
+            비밀번호 일치하면 수정페이지로 이동 또는 삭제처리를 진행함. -->
+        <button class="btn btn-warning" onclick="req_fn('update')">수정</button>
+        <button class="btn btn-danger" onclick="req_fn('delete')">삭제</button>
+    </div>
+
+    <div id="pass-check" class="mt-3">
+
+    </div>
+
+    <div class="row g-2 mt-5" id="comment-write">
+        <div class="col">
+            <input type="text" id="comment-writer" class="form-control" placeholder="작성자">
+        </div>
+        <div class="col-9">
+            <input type="text" id="comment-contents" class="form-control" placeholder="내용">
+        </div>
+        <div class="d-grid col">
+            <button class="btn btn-dark" onclick="comment_write()">작성</button>
+        </div>
+    </div>
+    <div class="container mt-5" id="comment-list">
+        <div th:if="${commentList == null}">
+            <p>작성된 댓글이 없습니다.</p>
+        </div>
+        <div th:unless="${commentList == null}">
+            <table class="table">
+                <tr>
+                    <th>writer</th>
+                    <th>contents</th>
+                    <th>date</th>
+                </tr>
+                <tr th:each="comment: ${commentList}">
+                    <td th:text="${comment.commentWriter}"></td>
+                    <td th:text="${comment.commentContents}"></td>
+                    <td th:text="${comment.createdAt}"></td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<div th:replace="~{component/footer :: footer}"></div>
+
+</body>
+<script th:inline="javascript">
+    const comment_list = (commentList) => {
+        console.log("댓글 목록 함수", commentList);
+        const resultArea = document.querySelector("#comment-list");
+        let output = "        <table class=\"table\">\n" +
+            "            <tr>\n" +
+            "                <th>writer</th>\n" +
+            "                <th>contents</th>\n" +
+            "                <th>date</th>\n" +
+            "            </tr>";
+        for (let i in commentList) {
+            output += "<tr>\n" +
+                "                <td>" + commentList[i].commentWriter + "</td>\n" +
+                "                <td>" + commentList[i].commentContents + "</td>\n" +
+                "                <td>" + commentList[i].createdAt + "</td>\n" +
+                "            </tr>";
+        }
+        output += "</table>";
+        resultArea.innerHTML = output;
+    }
+
+    const comment_write = () => {
+        const writer = document.querySelector("#comment-writer").value;
+        const contents = document.querySelector("#comment-contents").value;
+        const boardId = [[${board.id}]];
+        axios({
+            method: "post",
+            url: "/comment/save",
+            data: {
+                commentWriter: writer,
+                commentContents: contents,
+                boardId: boardId
+            }
+        }).then(res => {
+            console.log("res", res);
+            console.log("댓글 목록", res.data);
+            document.querySelector("#comment-writer").value = "";
+            document.querySelector("#comment-contents").value = "";
+            comment_list(res.data);
+        }).catch(err => {
+            console.log("err", err);
+        });
+    }
+
+    const list_fn = () => {
+        const page = [[${page}]]
+        const type = [[${type}]]
+        const q = [[${q}]]
+        location.href = `/board?page=${page}&type=${type}&q=${q}`;
+    }
+
+    const req_fn = (type) => {
+        document.querySelector("#pass-check").innerHTML =
+            `<input type="text" id="board-pass" placeholder="비밀번호">
+                <input type="button" onclick="pass_check('${type}')" value="확인">`;
+    }
+
+    const pass_check = (type) => {
+        const passInput = document.getElementById("board-pass").value;
+        const passDB = [[${board.boardPass}]];
+        const id = [[${board.id}]];
+        if (passInput == passDB) {
+            if (type == "update") {
+                location.href = `/board/update/${id}`;
+            } else if (type == "delete") {
+                // location.href = `/board/delete/${id}`;
+                axios({
+                    method: "delete",
+                    url: `/board/${id}`
+                }).then(res => {
+                    location.href = "/board";
+                }).catch(err => {
+                    alert("삭제 실패!");
+                });
+            }
+        } else {
+            alert("비밀번호가 일치하지 않습니다!");
+        }
+    }
+</script>
+</html>

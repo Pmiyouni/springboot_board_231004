@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div th:fragment="nav" id="nav">
+    <nav class="navbar navbar-expand-lg bg-body-tertiary" data-bs-theme="dark">
+        <div class="container-fluid ms-5 me-5">
+            <a class="navbar-brand" href="#">Board</a>
+            <div class="collapse navbar-collapse">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="#">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/board/save">글작성</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/board">글목록</a>
+                    </li>
+                </ul>
+                <form action="/board" method="get" class="d-flex" role="search">
+                    <select name="type" class="form-select me-2 w-50">
+                        <option value="boardWriter">작성자</option>
+                        <option value="boardTitle">제목</option>
+                    </select>
+                    <input class="form-control me-2 w-auto" type="search" name="q" placeholder="검색어를 입력하세요"
+                           aria-label="Search">
+                    <button class="btn btn-outline-success" type="submit">Search</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+    <script>
+        const search_func = () => {
+            console.log("검색함수");
+        }
+    </script>
+</div>
+
+</body>
+</html>
